@@ -1,0 +1,83 @@
+project: 
+  type: book
+  output-dir: _book
+  
+book: 
+  title: "Applied Statistics"
+  author: "Robin Donatello, Edward Roualdes"
+  date: last-modified
+  description: "Course notes for various Applied Statistics courses at CSU Chico"
+  search: true
+  reader-mode: true
+#  site-url: https://annakfell.github.io/ascnv2/ 
+#  repo-url: https://github.com/annakfell/ascnv2
+#  repo-branch: main
+#  repo-actions: [edit, issue]
+
+  page-footer:
+    right: |
+      This page is built with ❤️ and [Quarto](https://quarto.org/)
+
+  chapters:
+    - index.qmd
+    - part: "Preparing Data for Analysis"
+      chapters:
+        - dataprep.qmd
+    - part: "Data Visualization"
+      chapters:        
+        - data_viz.qmd
+    #     - select_analysis.qmd
+    # - part: "Statistical Inference"
+    #   chapters: 
+    #     - foundations.qmd
+    #     - bivariate_analysis.qmd
+    # - part: "Regression Modeling"
+    #   chapters: 
+    #     - reg_intro.qmd
+    #     - sl_reg.qmd
+    #     - moderation_stratification.qmd
+    #     - mlr.qmd
+    #     - model_building.qmd
+    #     - glm.qmd
+    #     - classification.qmd
+    # - part: "Multivariate Analysis"
+    #   chapters: 
+    #     - multivariate_intro.qmd
+    #     - PCA.qmd
+    #     - FA.qmd
+    # - part: "Multi-level Modeling"
+    #   chapters: 
+    #     - MLM_intro.qmd
+    #     - random_intercept.qmd
+    # - part: "Other Topics"
+    #   chapters:
+    #     - missing_data.qmd
+#    - part: "Appendix"
+#      chapters: 
+#        - common_error.qmd
+#        - setup_r.qmd
+
+format:
+  html:
+    theme:
+      light: [flatly] # from https://github.com/sta210-s22/website/blob/main/_quarto.yml
+      dark: [darkly]
+    code-copy: true
+    code-overflow: wrap
+    code-block-border-left: true
+    code-block-bg: true
+    respect-user-color-scheme: true
+    toc: true
+    toc-depth: 4
+#    toc-location: left
+#    page-layout: full
+        
+filters:
+  # - include-files.lua
+  # - quarto
+  - line-highlight
+
+execute: 
+  freeze: auto
+  warning: false
+  message: false

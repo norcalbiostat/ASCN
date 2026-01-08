@@ -1,0 +1,1491 @@
+# Visualizing Data {#sec-data-viz}
+
+:::{.callout-note}
+#### Packages Used
+This chapter uses the following packages: [ggplot2](https://ggplot2.tidyverse.org), [sjPlot](https://strengejacke.github.io/sjPlot/), [gtsummary](https://www.danieldsjoberg.com/gtsummary/), [waffle](https://github.com/hrbrmstr/waffle), [ggpubr](https://rpkgs.datanovia.com/ggpubr/),
+[ggdist](https://mjskay.github.io/ggdist/index.html),
+[ggridges](https://wilkelab.org/ggridges/), [scales](https://scales.r-lib.org), [gridExtra](https://cran.r-project.org/web/packages/gridExtra/index.html), 
+[likert](https://github.com/jbryer/likert) for the `pisaitems` data,
+[RColorBrewer](); [kableExtra]()
+and the [penguins](https://allisonhorst.github.io/palmerpenguins/index.html) data. 
+:::
+
+```{r, echo=FALSE}
+source("_common.R")
+library(waffle)
+library(gridExtra)
+library(ggridges)
+library(ggdist)
+library(scales)
+library(RColorBrewer)
+library(kableExtra)
+```
+
+
+Visualizing your data is hands down the most important thing you can learn to do. There are links to additional resources at the end of this document for additional learning. 
+
+## Choosing your audience
+
+
+The level of detail you put into your graphs/tables will depend on who
+the graph/table is for. In general, you will be visualizing data for
+three audience types: yourself and/or your data management team, an internal audience (other specialties within your organization, research coordinators), and external, professional audiences. The tabs below describe the three audience types and show an example graph for each.
+
+**Who is your audience?**
+
+::: panel-tabset
+### Yourself
+
+Graphs/tables for yourself and/or your working team can be "quick and dirty."
+These graphs are for getting a quick look at the data and are meant for
+people who are already familiar with the data.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+#| fig-height: 4
+#| fig-weight: 3 
+plot_frq(pen$island)
+
+```
+
+### Internal Audience
+
+When presenting for an audience with some familiarity with the project and the data analysis process, your graphs don't have to be completely perfect, but they should be fairly polished and be understandable. A good rule of thumb for these graphs is if they
+were to end up being published as-is without your knowledge, you
+wouldn't be completely embarrassed to see them in print.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+#| fig-height: 4
+#| fig-weight: 3 
+plot_frq(pen$island, title = "Count of Penguins by Island") +
+        xlab("Island") +
+        theme_minimal()
+
+```
+
+### Professional
+
+Professional quality graphs and tables have the highest amount of detail
+and take the most amount of time to make. They should be able to be
+interpreted by people not familiar with the project or data analysis, even
+without reading the rest of the report.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+#| fig-height: 4
+#| fig-weight: 3 
+plot_frq(pen$island, title = "Count of Penguins by Island") +
+          labs(subtitle = "Includes penguins of Adelie, Gentoo, and Chinstrap species") +
+          xlab("Island") +
+          ylab("Penguin Count") + 
+          theme_minimal()
+
+```
+:::
+
+
+## The Data
+
+We will use the `penguins` dataset that comes with the `palmerpenguins` package. This dataset contains size measurements for three penguin species observed on three islands in the Palmer Archipelago, Antarctica. Review `?penguins` to learn about the variables we will be using. 
+
+
+```{r}
+pen <- palmerpenguins::penguins
+```
+
+::: {.callout-warning appearance=simple}
+The following sections show examples of data visualizations by variable type (categorical, continuous, or both) and number of variables. These visualizations have been created in base R and at least one other R package to demonstrate different ways of creating similar visualizations and demonstrate key package features.
+
+:::
+
+## One Categorical Variable
+
+Both Nominal and Ordinal data types can be visualized using the same methods: tables, barcharts and pie charts. 
+
+
+### Tables
+
+Frequency and proportion (relative frequency) tables are the most common way to get summary statistics of a categorical variable.
+
+::: {.panel-tabset}
+
+## base
+
+The `table()` function produces a frequency table, where each entry represents the number of records in the data set holding the corresponding labeled value. 
+
+```{r}
+table(pen$species)
+```
+There are 152 Adelie penguins, 68 Chinstrap penguins, and 124 Gentoo penguins in this dataset. 
+
+
+## gtsummary
+
+:::{.callout-warning appearance=simple}
+The [tbl_summary](https://www.danieldsjoberg.com/gtsummary/reference/tbl_summary.html) function in the [gtsummary](https://www.danieldsjoberg.com/gtsummary/) package can create prettier tables more easily than in base R. The [tbl_summary](https://www.danieldsjoberg.com/gtsummary/reference/tbl_summary.html) function defaults to creating a summary table of the entire data set, so you must select only the variables you want to summarize before running the function. 
+:::
+
+```{r}
+pen |> select(species) |> tbl_summary()
+pen |> select(species, island) |> tbl_summary()
+```
+
+This can be advantageous if you want to have a single table showing the frequency distribution of multiple variables. 
+:::
+
+### Frequency Barcharts / Barplots
+
+::: {.callout-warning appearance=simple}
+
+Another common way to display categorical data frequencies is a barchart/barplot.
+:::  
+
+A Barchart or barplot takes these frequencies, and draws bars along the X-axis where the height of the bars is determined by the frequencies seen in the table. 
+
+::: {.panel-tabset}
+
+## base
+
+To create a barplot/barchart in base graphics requires the data to be in summarized in a table form first. Then the result of the table is plotted. The first argument is the table to be plotted, the `main` argument controls the title. 
+```{r}
+ps <- table(pen$species)
+barplot(ps, main="Frequency of Penguins by Species")
+```
+
+::: {.callout-warning appearance=simple}
+
+> note yaxis direction and no labels at top of bar
+
+:::  
+
+
+## ggplot
+The geometry needed to draw a barchart in ggplot is `geom_bar()`.
+```{r}
+ggplot(pen, aes(x=species)) + geom_bar()
+```
+
+**Adding Annotation**
+
+The biggest addition to increase the readability of a barchart is to add the frequencies on top of the bars. 
+
+```{r}
+ggplot(pen, aes(x=species)) + theme_bw() + 
+    geom_bar(aes(y = ..count..)) + ggtitle("Frequency of penguins by species") + 
+    geom_text(aes(y=..count.. + 10, label=..count..), stat='count', size = 5)
+```
+
+
+## sjPlot
+::: {.callout-warning appearance=simple}
+
+The [sjPlot](https://strengejacke.github.io/sjPlot/) package will automatically add frequencies for you, making it the preferred package for these situations.
+
+:::  
+
+```{r}
+plot_frq(pen, species,
+         title = "Count of penguins by species")
+```
+
+
+:::
+
+### Proportion Barcharts
+
+::: {.panel-tabset}
+
+## ggplot
+
+Often you don't want to compare counts but percents. To accomplish this, we have to aggregate the data to calculate the proportions first, then plot the aggregated data using `geom_col` to create the columns.
+
+```{r}
+spec.props <- data.frame(prop.table(table(pen$species)))
+spec.props # what does this data look like? 
+
+ggplot(spec.props, aes(x=Var1, y=Freq)) + geom_col() + 
+  ylab("Proportion") + xlab("Species") + 
+  ggtitle("Proportion of penguins by species")
+```
+
+## base
+
+:::{.callout-warning appearance=simple}
+* create a 'base' tab, but with only space for robin to write
+
+:::
+
+## sjPlot
+
+This is the same barchart generated by the frequency example; note the proportion shown as a percentage below each species' count. sjPlot will automatically do this for you - another reason why it's the preferred package!
+
+```{r}
+plot_frq(pen, species,
+         title = "Frequency of penguins by species")
+```
+
+:::
+
+
+### Other
+
+::: {.callout-warning appearance=simple}
+
+Although tables and barcharts are popular data visualizations for a reason, you may want to show your data in a different way. Below are some examples of alternate data visualizations that show similar information to tables/barcharts. 
+
+:::  
+
+
+::: {.panel-tabset}
+#### Cleveland Dot Plot
+
+Another way to visualize categorical data that takes up less ink than bars is a Cleveland dot plot. Here again we are plotting summary data instead of the raw data. This uses the `geom_segment` that draws the lines from x=0 to the value of the proportion (named `Freq` because of the way `data.frame` works).
+
+```{r}
+ggplot(spec.props, aes(x=Freq, y=Var1)) +  
+  geom_point(size = 3) + xlab("Proportion of penguins") + 
+  theme_bw() + ylab("Species") +
+  geom_segment(aes(x=0, xend=Freq, y=Var1, yend=Var1), color='grey50')
+```
+
+#### Pie Chart
+
+Just like `barplot()`, `pie()` takes a table object as its argument. 
+
+**base**
+```{r}
+ps <- table(pen$species)
+pie(ps)
+```
+
+Pie charts are my _least_ favorite plotting type. Human eyeballs can't distinguish between angles as well as we can with heights. A mandatory piece needed to make the wedges readable is to add the percentages of each wedge. 
+```{r}
+pie(ps, labels = paste0(names(ps), ' (', prop.table(ps)*100, "%)"))
+```
+
+**ggplot**
+
+And here I thought pie charts couldn't get worse... I'm not a fan at all of the ggplot version. So I'm not even going to show it. [STHDA](http://www.sthda.com/english/wiki/ggplot2-pie-chart-quick-start-guide-r-software-and-data-visualization) has a great tutorial that does show you how to make one. 
+
+However -- Never say never. [Storytelling with data](http://www.storytellingwithdata.com/blog/2019/8/8/forty-five-pie-charts-never-say-never) has a blog post with an example of a *good* use of pie charts. 
+
+
+#### Waffle Chart 
+This type of chart is not natively found in the `ggplot2` package, but its own `waffle` package. These are great for infographics. 
+
+
+```{r}
+waffle(ps/10, rows=5, size=0.5, 
+       title="Species of penguins", 
+       xlab="1 square == 10 penguins")
+```
+
+:::
+
+## One Continuous Variable
+Here we can look at the bill length and depth, flipper length, and body mass of the penguins. 
+
+### Dotplot
+
+::: {.callout-warning appearance=simple}
+> RAD change this to an introduction/motivating example instead of describing a plot type. 
+
+:::
+
+```{r}
+plot(pen$bill_length_mm)
+```
+
+The base function `plot()` creates a **dotplot** for a continuous variable. The value of the variable is plotted on the y axis, and the index, or row number, is plotted on the x axis. This gives you a nice, quick way to see the values of the data. 
+
+Often you are not interested in the individual values of each data point, but the _distribution_ of the data. In other words, where is the majority of the data? Does it look symmetric around some central point? Around what values do the bulk of the data lie? 
+
+
+### Histograms
+Rather than showing the value of each observation, we prefer to think of the value as belonging to a *bin*. **The height of the bars in a histogram display the frequency of values that fall into those of those bins.** For example if we cut the bill length distribution into 7 bins of equal width, the frequency table would look like this: 
+
+```{r}
+table(cut(pen$bill_length_mm, 7))
+```
+
+In a histogram, the binned counts are plotted as bars into a histogram. Note that the x-axis is continuous, so the bars touch. This is unlike the barchart that has a categorical x-axis, and vertical bars that are separated.
+
+::: {.panel-tabset}
+
+## base
+You can make a histogram in base graphics super easy. 
+```{r}
+hist(pen$bill_length_mm)
+```
+
+And it doesn't take too much to clean it up. Here you can specify the number of bins by specifying how many `breaks` should be made in the data (the number of breaks controls the number of bins, and bin width) and use `col` for the fill color. 
+```{r}
+hist(pen$bill_length_mm, xlab="Bill length in mm", main="Histogram of penguin bill lengths", col="cyan", breaks=20)
+```
+
+## ggplot
+```{r}
+ggplot(pen, aes(x=bill_length_mm)) + geom_histogram(binwidth = 2.2)
+```
+
+The binwidth here is set by looking at the cut points above that were used to create 7 bins. Notice that darkgrey is the default fill color, but makes it hard to differentiate between the bars. So we'll make the outline black using `colour`, and `fill` the bars with white. 
+```{r}
+ggplot(pen, aes(x=bill_length_mm)) + geom_histogram(colour="black", fill="white") + 
+  ggtitle("Distribution of penguin bill lengths")
+```
+
+Note I did **not** specify the `binwidth` argument here. The size of the bins can hide features from your graph, the default value for ggplot2 is range/30 and usually is a good choice. 
+
+## ggpubr
+
+The `ggpubr` package is based on `ggplot2`, with simpler syntax for quickly generating polished graphs.
+
+```{r}
+gghistogram(pen, x = "bill_length_mm",
+            title = "Distribution of penguin bill lengths")
+
+```
+
+:::
+
+### Density plots
+To get a better idea of the true shape of the distribution we can "smooth" out the bins and create what's called a `density` plot or curve. Notice that the shape of this distribution curve is much more... "wigglier" than the histogram may have implied. 
+
+::: {.panel-tabset}
+
+## base
+
+```{r}
+# plot(density(na.omit(pen$bill_length_mm))) 
+pen$bill_length_mm |> na.omit() |> density() |> plot()
+```
+
+Awesome title huh? (NOT)
+
+::: {.callout-warning appearance=simple}
+
+> discuss why na.omit and nesting vs pipe example
+
+Using `na.omit()` is dangerous! This will remove ALL rows with ANY missing data in it. Regardless if the missing values are contained in the variables you are interested in. 
+The example below employs a trick/work around to not have NA values show in the output.
+We take the data set `addhealth` _and then_ `select` the variables we want to plot, _and then_ we use `na.omit()` to delete all rows with missing data. Then that is saved as a new, temporary data frame specifically named for this case (`plot.bmi.smoke`). 
+
+:::
+
+## ggplot2
+
+```{r}
+ggplot(pen, aes(x=bill_length_mm)) + geom_density()
+```
+
+## ggpubr
+
+```{r}
+ggdensity(pen, x = "bill_length_mm")
+```
+
+:::  
+
+### Histograms + density 
+Often is is more helpful to have the density (or kernel density) plot _on top of_ a histogram plot. 
+
+::: {.panel-tabset}
+
+## base
+Since the height of the bars in a histogram default to showing the frequency of records in the data set within that bin, we need to 1) scale the height so that it's a _relative frequency_, and then use the `lines()` function to add a `density()` line on top. 
+
+```{r}
+hist(pen$bill_length_mm, prob=TRUE)
+lines(density(na.omit(pen$bill_length_mm)), col="blue")
+```
+
+## ggplot
+The syntax starts the same, we'll add a new geom, `geom_density` and color the line blue. Then we add the histogram geom using `geom_histogram` but must specify that the y axis should be on the density, not frequency, scale. Note that this has to go inside the aesthetic statement `aes()`. I'm also going to get rid of the fill by using `NA` so it doesn't plot over the density line. 
+```{r}
+ggplot(pen, aes(x=bill_length_mm)) + geom_density(col="blue") + 
+  geom_histogram(aes(y=..density..), colour="black", fill=NA)
+```
+
+## ggpubr
+```{r}
+gghistogram(pen,
+            x = "bill_length_mm", 
+            add_density = TRUE,
+            add.params = list(color="blue"))
+```
+
+
+:::
+
+### Boxplots
+Another very common way to visualize the distribution of a continuous variable is using a boxplot. Boxplots are useful for quickly identifying where the bulk of your data lie. R specifically draws a "modified" boxplot where values that are considered outliers are plotted as dots. 
+
+::: {.panel-tabset}
+
+## base
+```{r}
+boxplot(pen$bill_length_mm)
+```
+
+Notice that the only axis labeled is the y=axis. Like a dotplot the x axis, or "width", of the boxplot is meaningless here. We can make the axis more readable by flipping the plot on its side. Horizontal is a bit easier to read in my opinion. 
+
+A boxplot displays the median, so if we want to add more statistical detail and see any discrepancies between parameters we can add the mean as a point. 
+```{r}
+#| source-line-numbers: "3"
+
+boxplot(pen$bill_length_mm, 
+        horizontal = TRUE, main="Distribution of penguin bill lengths", xlab="Bill length in mm")
+points(mean(na.omit(pen$bill_length_mm)), 1, col = "red", pch = 19)
+```
+
+## ggplot
+What about ggplot? ggplot doesn't really like to do univariate boxplots. We can get around that by specifying that we want the box placed at a specific x value. 
+
+```{r}
+ggplot(pen, aes(x=1, y=bill_length_mm)) + geom_boxplot()
+```
+
+To flip it horizontal you may think to simply swap x and y? Good thinking. Of course it wouldn't be that easy. So let's just flip the whole darned plot on its coordinate axis. We can also add a line for the mean while we're at it.
+
+```{r}
+#| source-line-numbers: "2,4"
+
+ggplot(pen, aes(x=1, y=bill_length_mm)) + geom_boxplot() + 
+  coord_flip() +
+  # add mean line
+  geom_hline(yintercept = mean(na.omit(pen$bill_length_mm)), color="red", linetype="dashed")
+
+```
+
+## ggpubr
+
+```{r}
+ggboxplot(pen, x=1, y="bill_length_mm", 
+          main = "Distribution of penguin bill lengths",
+          ylab = "Bill length in mm")
+```
+
+Let's flip this one horizontal and add a point for the mean here too.
+
+```{r}
+#| source-line-numbers: "2,5"
+
+ggboxplot(pen, x=1, y="bill_length_mm", 
+          orientation = "horizontal",
+          main = "Distribution of penguin bill lengths",
+          ylab = "Bill length in mm",
+          add = 'mean')
+```
+
+:::
+
+### Violin plots
+
+:::{.callout-warning appearance=simple}
+Violin plots are similar in concept to boxplots, but they show the shape
+of the data distribution rather than representing the data as a box. The following graphs show the same `bill_length_mm` data visualized as a violin plot instead of a boxplot.
+
+:::
+
+::: {.panel-tabset}
+
+## ggplot
+
+```{r}
+ggplot(pen, aes(x=1, y=bill_length_mm)) + geom_violin()
+```
+
+**Adding the mean**
+
+You can add the mean to violin plots too, just like you did to the boxplots.
+```{r}
+#| source-line-numbers: "3"
+
+ggplot(pen, aes(x=1, y=bill_length_mm)) + geom_violin() +
+  # add mean point
+  stat_summary(fun.y = "mean", geom = "point", size = 3, pch = 17, color = "blue")
+```
+
+::: {.callout-tip appearance=minimal collapse=true}
+
+When using `stat_summary` to add a mean point, I suggest playing around with `size` and plotting character `pch` to get a feel for how these work. You can also look at `?pch` (and scroll down in the help file) to see the 25 default plotting characters.
+
+:::
+
+## ggpubr
+
+```{r}
+ggviolin(pen, x=1, y="bill_length_mm")
+```
+
+**Adding the mean**
+
+```{r}
+#| source-line-numbers: "2"
+
+ggviolin(pen, x=1, y="bill_length_mm",
+         add = 'mean')
+```
+
+:::
+
+### Boxplot + violin plots
+
+Overlaying a boxplot and a violin plot serves a similar purpose to Histograms + Density plots. 
+
+::: {.panel-tabset}
+
+## ggplot
+
+```{r}
+ggplot(pen, aes(x=1, y=bill_length_mm)) + geom_violin() + geom_boxplot()
+```
+
+Better appearance - different levels of transparency of the box and violin. 
+
+```{r}
+ggplot(pen, aes(x=1, y=bill_length_mm)) + xlab("") + theme_bw() + 
+              geom_violin(fill="blue", alpha=.1) + 
+              geom_boxplot(fill="blue", alpha=.5, width=.2) + 
+              theme(axis.title.x=element_blank(),
+              axis.text.x=element_blank(),
+              axis.ticks.x=element_blank())
+```
+
+## ggpubr
+
+```{r}
+ggviolin(pen, x=1, y="bill_length_mm", 
+         alpha=.2, fill="blue", 
+         add = "boxplot", add.params = list(alpha=.4),
+         xlab="") 
+```
+
+:::
+
+### Normal QQ plots
+The last useful plot that we will do on a single continuous variable is to assess the _normality_ of the distribution. Basically how close the data follows a normal distribution. 
+
+::: {.panel-tabset}
+
+## base
+```{r}
+qqnorm(pen$body_mass_g)
+qqline(pen$body_mass_g, col="red")
+```
+
+The line I make red because it is a reference line. The closer the points are to following this line, the more "normal" the shape of the distribution is. Body mass has some pretty strong deviation away from that line. Below I have plotted what a normal distribution looks like as an example of a "perfect" fit. 
+
+```{r}
+z <- rnorm(1000)
+qqnorm(z)
+qqline(z, col="blue")
+```
+
+## ggplot
+qq (or qnorm) plots specifically plot the data against a theoretical distribution. That means in the `aes()` aesthetic argument we don't specify either x or y, but instead the `sample=` is the variable we want to plot. 
+```{r}
+ggplot(pen, aes(sample=body_mass_g)) + stat_qq()
+```
+
+## ggpubr
+
+```{r}
+ggqqplot(pen, x="body_mass_g")
+```
+
+:::
+
+## Likert
+
+Likert scale questions are commonly used on surveys to measure
+participants' subjective beliefs, opinions, and attitudes toward various
+statements. Participants are typically asked to indicate how much they
+agree or disagree with a series of statements. Other variations include
+how likely or unlikely a participant would be to take a particular
+action or how familiar or unfamiliar a participant is with a concept or
+program. Some examples of likert scale questions are below:
+
+-   This internship provided me with important skills related to my
+    career goals
+    -   Strongly disagree
+    -   Disagree
+    -   Neither agree nor disagree
+    -   Agree
+    -   Strongly agree
+-   How satisfied are you with your overall internship experience?
+    -   Very dissatisfied
+    -   Somewhat dissatisfied
+    -   Neither satisfied nor dissatisfied
+    -   Somewhat satisfied
+    -   Very satisfied
+-   How familiar are you with the SNAP/CalFresh program?
+    -   Very unfamiliar
+    -   Somewhat unfamiliar
+    -   Neither familiar nor unfamiliar
+    -   Somewhat familiar
+    -   Very familiar
+
+```{r, fig.width=8, fig.height=6}
+tmp <- pisa %>% select(colnames(pisa)[grepl("ST24Q0", colnames(pisa))]) %>%
+                  select(-ST24Q04, -ST24Q05, -ST24Q06, -ST24Q07, -ST24Q08, -ST24Q09)
+
+# Setting column names
+# Note: these column names are for illustration purposes only and do not reflect the actual data
+colnames(tmp) <- c("I prefer pancakes over waffles",
+                   "My favorite breakfast food is french toast",
+                   "I would choose syrup over fruit topping")
+
+# Set color palette
+likert.pal.4 <- brewer.pal(4, "BrBG")
+
+# Creating the likert graph
+plot_likert(tmp,
+            grid.range = c(1.0, 1.0), # Sets the axis range
+            expand.grid = FALSE,
+            values = "sum.outside",
+            catcount = 4,
+            geom.colors = likert.pal.4,
+            title = "When choosing breakfast foods...",
+            show.prc.sign = TRUE, reverse.scale = TRUE, show.n=FALSE) + set_theme(legend.pos = "top", base = theme_minimal()) 
+
+```
+
+Note that in this example, there are four potential answer choices:
+strongly disagree, disagree, agree, and strongly agree. Often, surveys will
+use a five-answer likert scale with a neutral response option (example:
+neither agree nor disagree).
+
+## Categorical v. Categorical
+
+### Two-way tables
+
+::: {.callout-warning appearance=simple}
+Frequency and proportion tables are both ways of comparing one set of variables against another. Frequency tables report the count of each variable based on another variable, while proportion tables show variable percentages by either cells, rows, or columns.
+
+:::
+
+::: {.panel-tabset}
+
+## Frequency
+Cross-tabs, cross-tabulations and two-way tables (all the same thing, different names) can be created by using the `table()` function. 
+
+The frequency table is constructed using the `table()` function. 
+```{r}
+table(pen$island, pen$species)
+```
+
+There are 44 Adelie penguins and 124 Gentoo penguins on Biscoe Island, 56 Adelie and 68 Chinstrap penguins on Dream Island, and 52 Adelie penguins on Torgersen Island.
+
+## Proportion
+Choose your percentages depending on your research question. What are you wanting to compare? 
+
+Best practices: 
+
+* Explanatory variable on the rows
+* Response variable on the columns
+* Calculate row %'s as the % of the response for each explanatory group. 
+
+Here are demonstrations of how the interpretation of the percents change depending on what the denominator is. 
+
+**Cell proportions**
+
+Wrapping `prop.table()` around a table gives you the **cell** proportions. 
+```{r}
+prop.table(table(pen$island, pen$species))
+```
+12.8% of all penguins are Adelie penguins living on Biscoe Island, and 36% are Gentoo penguins living on Biscoe Island, so about 39% of all penguins in our data are living on Biscoe Island. 
+
+**Row proportions**
+
+To get the **row** proportions, you specify `margin=1`. The percentages now add up to 1 across the rows. 
+```{r}
+round(prop.table(table(pen$island, pen$species), margin=1),3)
+```
+
+26.2% of penguins on Biscoe Island are from the Adelie species. The remaining 73.8% on the island are Gentoo penguins.
+
+**Column proportions**
+
+To get the **column** proportions, you specify `margin=2`. The percentages now add up to 1 down the columns. 
+```{r}
+round(prop.table(table(pen$island, pen$species), margin=2),3)
+```
+
+0.289% of all Adelie penguins are on Biscoe Island. Chinstrap and Gentoo species are endemic to a single island, so 100% of their populations are on Dream and Torgersen Island, respectively.
+
+:::
+
+### Grouped bar charts: stacked
+
+To compare proportions of one categorical variable within the same level of another, we can use grouped barcharts. 
+
+::: {.panel-tabset}
+
+## base
+As before, the object to be plotted needs to be the result of a table. 
+```{r}
+is <- table(pen$island, pen$species)
+barplot(is)
+```
+
+## ggplot
+Again plot the cut on the x axis, but then `fill` using the second categorical variable. This has the effect of visualizing the **row** percents from the table above, or the percent of species on each island. 
+
+```{r}
+ggplot(pen, aes(x=island, fill=species)) + geom_bar()
+```
+
+:::
+
+### Grouped bar charts: side by side
+
+Stacked bars can be difficult to interpret, and very difficult to compare values between groups. A side by side barchart is preferable. 
+The `beside=TRUE` is what controls the placement of the bars. 
+
+::: {.panel-tabset}
+
+## base
+```{r}
+barplot(is, main="quick side by side barchart using base graphics", 
+        beside=TRUE)
+```
+
+## ggplot
+Again the default is a stacked barchart. So we just specify `position=dodge` to put the bars side by side. 
+```{r}
+ggplot(pen, aes(x=island, fill=species)) + geom_bar(position = "dodge")
+```
+
+And look, an automatic legend. What if I wanted to better compare island population proportions within species? This is the **column** percentages. Just switch which variable is the x axis and which one is used to fill the colors!
+```{r}
+ggplot(pen, aes(x=species, fill=island)) + geom_bar(position = "dodge")
+```
+
+For more than 2 colors I do not recommend choosing the colors yourself. I know little about color theory so I use the built-in color palettes. See the [Choosing Colors](#choosing-colors) section for tips and resources about selecting color palettes.
+
+And this easy change is why we love `ggplot2`. 
+
+:::
+
+### Grouped bar charts with percentages
+Not as easy as one would hope, but the solution is to calculate the desired percentages first and then plot the summary data using either `geom_bar(stat='identity')` or `geom_col()`. 
+
+```{r}
+calc.props <- pen %>% group_by(island, species) %>%
+              summarise(count=n()) %>%
+              mutate(pct=round(count/sum(count),3))
+calc.props
+```
+
+::: {.panel-tabset}
+
+## ggplot
+
+Since we're plotting summary data, the height of the bars is specified using `y=pct`. 
+
+```{r}
+ggplot(calc.props, aes(x=island, fill=species, y=pct)) +
+                  geom_col(position="dodge") + theme_bw() 
+```   
+
+Now set some options to the y axis using `scale_y_continuous()` to make the graph more accurate and readable. The `labels=percent` comes from the `scales` package. 
+
+```{r}
+#| source-line-numbers: "3"
+
+ggplot(calc.props, aes(x=island, fill=species, y=pct)) +
+                  geom_col(position="dodge") + theme_bw() +
+                  scale_y_continuous(limits=c(0,1), labels=percent)
+```   
+
+## sjPlot
+
+sjPlot does a very nice job of being able to cleanly show not only n's but percents. 
+```{r}
+plot_xtab(pen$island, pen$species, margin="row", coord.flip = TRUE) 
+```
+
+:::
+
+### Mosaic plots
+But what if you want to know how two categorical variables are related and you don't want to look at two different barplots? Mosaic plots are a way to visualize the proportions in a table. So here's the two-way table we'll be plotting. 
+```{r}
+table(pen$island, pen$species)
+```
+
+The syntax for a mosaic plot uses _model notation_, which is basically y ~ x where the ~ is read as "twiddle" or "tilde". It's to the left of your **1** key.
+```{r}
+mosaicplot(island~species, data=pen)
+```
+
+Helpful, ish. Here are two very useful options. In reverse obviousness, `color` applies shades of gray to one of the factor levels, and `shade` applies a color gradient scale to the cells in order of what is less than expected (red) to what is more than expected (blue) if these two factors were completely independent. 
+```{r, fig.width=10}
+par(mfrow=c(1,2)) # display the plots in 1 row and 2 columns
+mosaicplot(island~species, data=pen, color=TRUE)
+mosaicplot(island~species, data=pen, shade=TRUE)
+```
+::: {.callout-warning appearance=simple}
+
+For example, there are fewer Adelie penguins and more Gentoo penguins than expected on Torgersen Island, and more Chinstrap penguins than expected on Dream Island. As you can see, knowing what your data means when trying to interpret what the plots are telling you is essential. 
+:::
+
+That's about all the ways you can plot categorical variables. 
+
+If you are wondering why there was no 3D barcharts demonstrated see [here](http://faculty.atu.edu/mfinan/2043/section31.pdf), [here](https://www.bbc.co.uk/bitesize/articles/z7cx7yc), and [here](https://en.wikipedia.org/wiki/Misleading_graph) for other ways you can really screw up your visualization.
+
+## Continuous v. Continuous 
+
+### Scatterplot
+The most common method of visualizing the relationship between two continuous variables is by using a scatterplot. 
+
+::: {.panel-tabset}
+
+## base
+Back to the `plot()` command. Here we use model notation again, so it's $y~x$. 
+```{r}
+plot(flipper_length_mm~body_mass_g, data=pen)
+```
+
+Looks like for the most part as penguin body mass increases so does flipper length. That makes sense. 
+
+## ggplot
+With ggplot we specify both the x and y variables, and add a point. 
+```{r}
+ggplot(pen, aes(x=body_mass_g, y=flipper_length_mm)) + geom_point()
+```
+
+:::
+
+### Adding lines to the scatterplots 
+
+Two most common trend lines added to a scatterplots are the "best fit" straight line and the "lowess" smoother line. 
+
+::: {.panel-tabset}
+
+## base
+The best fit line (in blue) gets added by using the `abline()` function wrapped around the linear model function `lm()`. Note it uses the same model notation syntax and the `data=` statement as the `plot()` function does. The lowess line is added using the `lines()` function, but the `lowess()` function itself doesn't allow for the `data=` statement so we have to use `$` sign notation. 
+
+```{r}
+plot(flipper_length_mm~body_mass_g, data=pen)
+abline(lm(flipper_length_mm~body_mass_g, data=pen), col="blue")
+lines(lowess(na.omit(pen$flipper_length_mm)~na.omit(pen$body_mass_g)),
+      col="red")
+```
+
+## ggplot
+With ggplot, we just add a `geom_smooth()` layer. 
+```{r}
+ggplot(pen, aes(x=body_mass_g, y=flipper_length_mm)) + geom_point() + geom_smooth() 
+```
+
+Here the point-wise confidence interval for this lowess line is shown in grey. If you want to turn the confidence interval off, use `se=FALSE`. Also notice that the smoothing geom uses a different function or window than the `lowess` function used in base graphics. 
+
+Here it is again using the `ggplot` plotting function and adding another `geom_smooth()` layer for the `lm` (linear model) line in blue, and the lowess line (by not specifying a method) in red.
+
+```{r}
+ggplot(pen, aes(x=body_mass_g, y=flipper_length_mm)) + geom_point() + 
+  geom_smooth(se=FALSE, method="lm", color="blue") + 
+  geom_smooth(se=FALSE, color="red")
+```
+
+:::
+
+### Line plots
+
+Line plots connect each dot with a straight line. This is most often done when measuring trends of the response as the value of x increases (such as a time series)
+
+::: {.callout-warning appearance=simple}
+> switch out example for time series
+
+:::
+
+We saw earlier that `body_mass_g` and `flipper_length_mm` seemed possibly linear. Let see how the average flipper length changes with body mass. 
+```{r}
+mm.per.g <- pen %>% group_by(body_mass_g) %>% summarise(mean = mean(flipper_length_mm))
+```
+
+::: {.panel-tabset}
+
+## base
+For base graphics, type='b' means both points and lines, 'l' gives you just lines and 'p' gives you only points. You can find more plotting character options under `?pch`. 
+
+```{r}
+plot(mean~body_mass_g, data=mm.per.g, type='l')
+```
+
+## ggplot
+With ggplot we specify that we want a line geometry only. 
+```{r}
+ggplot(mm.per.g, aes(x=body_mass_g, y=mean)) + geom_line()
+```
+
+:::
+
+How does this relationship change with penguin species? First lets 
+get the average flipper length per combination of body mass and species 
+
+```{r}
+mmpgs <- pen %>% group_by(body_mass_g, species) %>% summarise(mean = mean(flipper_length_mm))
+```
+
+::: {.panel-tabset}
+
+## ggplot
+This is where ggplot starts to excel in its ease of creating more
+complex plots. All we have to do is specify that we want the lines 
+colored by the cut variable. 
+
+```{r}
+ggplot(mmpgs, aes(x=body_mass_g, y=mean, col=species)) + geom_line()
+```
+
+And we get one line per species. 
+
+## base
+This plot can be created in base graphics, but it takes an advanced 
+knowledge of the graphics system to do so. So I do not show it here. 
+
+:::
+
+## Continuous v. Categorical
+Create an appropriate plot for a continuous variable, and plot it for each
+level of the categorical variable. 
+
+
+
+### Dotplot/strip chart
+
+Dotplots can be very useful when plotting dots against several categories. They can also be called stripcharts. 
+
+::: {.panel-tabset}
+
+## base
+```{r}
+stripchart(body_mass_g ~ species, data=pen)
+```
+
+## ggplot
+We can reproduce the same thing by plotting one continuous variable against one categorical variable, and adding a layer of points. I'd argue that horizontal looks better due to the axis-labels. 
+```{r}
+#| fig-width: 10
+a <- ggplot(pen, aes(y=body_mass_g, x=species)) + geom_point()
+b <- ggplot(pen, aes(y=species, x=body_mass_g)) + geom_point()
+grid.arrange(a, b, ncol=2)
+```
+:::
+
+
+### Grouped boxplots
+
+::: {.panel-tabset}
+
+## base
+
+Base graphics plots grouped boxplots with also just the addition of a twiddle (tilde) `~`. 
+Another example of where model notation works. 
+
+```{r}
+boxplot(bill_length_mm~species, data=pen)
+```
+
+## ggplot
+A simple addition, just define your x and y accordingly. 
+```{r}
+ggplot(pen, aes(x=species, y=bill_depth_mm, fill=species)) + geom_boxplot()
+```
+
+:::
+
+**Descriptive additions**
+
+::: {.panel-tabset}
+## Adding violins
+
+Violin plots can be overlaid here as well. 
+```{r}
+ggplot(pen, aes(x=species, y=bill_depth_mm, fill=species)) +
+        geom_violin(alpha=.1) + 
+        geom_boxplot(alpha=.5, width=.2)
+```
+
+## Adding jittered points
+
+Jitter is a graph option that helps visualize the distribution of data
+points that would otherwise overlap in continuous data plotted against
+categorical data. It works by introducing random noise that moves the
+categorical side of the points slightly across the binwidth of the
+graph. The first graph below adds data points without using jitter, while the second graph
+uses jitter. Notice that the graph using jitter has more horizontal
+space between the points, which makes it easier to view the point
+distribution.
+```{r fig.width=14, fig.height=6}
+plotting <- pen %>% select(species, bill_depth_mm) %>% na.omit()
+
+nojitter <- ggboxplot(plotting, x="species", y="bill_depth_mm", 
+                      add = "point")
+
+jitter <- ggboxplot(plotting, x="species", y="bill_depth_mm",
+                    add = "jitter")
+
+grid.arrange(nojitter, jitter, ncol = 2)
+```
+
+## Adding ridge plots
+
+```{r}
+
+pen %>%
+  select(species,
+         bill_depth_mm) %>%
+  na.omit() %>%
+  ggplot(aes(x=species,
+             y=bill_depth_mm,
+             fill = species)) +
+  geom_boxplot(alpha=.5, width=.2) +
+  stat_summary(fun="mean") +
+  stat_slab(alpha = .3)
+
+```
+:::
+
+### Grouped histograms
+
+::: {.panel-tabset}
+
+## ggplot
+By default ggplot wants to overlay all plots on the same grid. This doesn't look to good with histograms. Instead you can overlay density plots
+```{r}
+#| fig-width: 11
+a <- ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_histogram()
+b <- ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density() 
+grid.arrange(a,b, ncol=2)
+```
+
+The solid fills are still difficult to read, so we can either turn down the alpha (turn up the transparency) or only color the lines and not the fill. 
+```{r}
+#| fig-width: 11
+c <- ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density(alpha=.2)
+d <- ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density() 
+grid.arrange(c,d, ncol=2)
+```
+
+## base
+There is no easy way to create grouped histograms in base graphics, so we will skip it. 
+
+:::
+
+### Ridgeline plots
+
+Ridgeline plots have not been added to the base distribution of `ggplot2` yet. For now it's available in the `ggridges` package. Really good way to visualize density plots without the overlapping issue. 
+
+```{r, fig.width=10}
+ggplot(pen, aes(x=bill_depth_mm, y=species)) + geom_density_ridges()
+```
+
+
+## Faceting / paneling 
+
+This is a good place to introduce a term called `faceting`. The definition is _a particular aspect or feature of something_, or _one side of something many-sided, especially of a cut gem_. Basically instead of plotting the grouped graphics on the same plotting area, we let each group have its own plot, or facet.  
+
+We add a `facet_wrap()` and specify that we want to panel on the species group. Note the twiddle in front of species. 
+
+```{r}
+#| fig-height: 4
+#| fig-width: 9
+ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density() + facet_wrap(~species)
+```
+
+The grid placement can be semi-controlled by using the `ncol` argument in the `facet_wrap()` statement. 
+```{r}
+#| fig-height: 4
+#| fig-width: 9
+ggplot(pen, aes(x=bill_depth_mm, fill=species)) + 
+  geom_density() + facet_wrap(~species, ncol=4)
+```
+
+It is important to compare distributions across groups on the same scale, and our eyes can compare items vertically better than horizontally. So let's force `ncol=1`. 
+
+```{r}
+
+ggplot(pen, aes(x=bill_depth_mm, fill=species)) + 
+  geom_density() + facet_wrap(~species, ncol=1)
+```
+
+### Paneling on two variables
+
+Who says we're stuck with only faceting on one variable? A variant on `facet_wrap` is `facet_grid`. Here we can specify multiple variables to panel on. 
+
+```{r}
+#| fig-height: 4
+ggplot(pen, aes(x=body_mass_g, fill=sex)) + geom_density() + facet_grid(sex~island)
+```
+
+How about plotting bill length against flipper length, for all combinations of species and island, with the points further separated by sex?
+```{r}
+#| fig-height: 4
+ggplot(pen, aes(x=flipper_length_mm, y=bill_length_mm, color=sex)) + geom_point() + facet_grid(island~species)
+```
+
+
+## Multiple plots per window
+
+::: {.panel-tabset}
+
+## base
+I use `par(mfrow=c(r,c))` for base graphics, where `r` is the number of rows and `c` the number of columns. 
+
+```{r}
+#| fig-width: 11
+par(mfrow=c(1,3))
+plot(pen$bill_depth_mm)
+plot(pen$species)
+plot(pen$bill_length_mm ~ pen$bill_depth_mm)
+```
+
+Other resources including learning about `layouts`. [Multipanel plotting with base graphics](http://seananderson.ca/courses/11-multipanel/multipanel.pdf) 
+
+## ggplot
+Use the `grid.arrange` function in the `gridExtra` package. I've done it several times above. You assign the output of a ggplot object to an object (here it's `plot1` and `plot2`). Then you use `grid.arrange()` to arrange them either side by side or top and bottom. 
+```{r}
+#| fig-width: 11
+a <- ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density(alpha=.2)
+b <- ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density() 
+grid.arrange(a,b, ncol=2)
+```
+
+## Quarto
+
+::: {.callout-warning appearance=simple}
+Quarto makes it even easier to arrange multiple plots using `layout-ncol`.
+
+```{r}
+#| layout-ncol: 2
+
+ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density(alpha=.2)
+ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density() 
+```
+
+See [this link](https://quarto.org/docs/get-started/computations/rstudio.html#multiple-figures) for more context and other options for labeling graphs. 
+
+:::
+
+:::
+
+## Multivariate (3+ variables)
+This is not much more complicated than taking an appropriate bivariate plot and adding a third variable through paneling, coloring, or changing a shape. 
+
+This is trivial to do in ggplot, not trivial in base graphics. So I won't show those examples. 
+
+### Three continuous
+Continuous variables can also be mapped to the size of the point. Here I set the alpha on the points so we could see the overplotting (many points on a single spot). So the darker the spot the more data points on that spot. 
+
+```{r}
+ggplot(pen, aes(x=bill_length_mm, y=bill_depth_mm, size=body_mass_g)) + geom_point(alpha=.2)
+```
+
+
+### Scatterplot matrix
+A scatterplot matrix allows you to look at the bivariate comparison of multiple pairs of variables simultaneously. First we need to trim down the data set to only include the variables we want to plot, then we use the `pairs()` function.
+
+```{r}
+c.vars <- pen[,c('flipper_length_mm', 'bill_length_mm', 'bill_depth_mm', 
+                 'body_mass_g')]
+pairs(c.vars)
+```
+
+::: {.callout-warning appearance=simple}
+> Replace original interpretation- We can see price has a non-linear relationship with X, Y and Z and x & y have a near perfect linear relationship. 
+
+:::
+
+
+### Two categorical and one continuous
+This is very similar to side by side boxplots, one violin plot per `sex`, within each island 
+
+```{r}
+ggplot(pen, aes(x=island, y=bill_length_mm, fill=species)) + geom_violin()
+```
+
+Best bet here would be to panel on species and change the x axis to location.  
+```{r}
+#| fig-width: 9
+ggplot(pen, aes(x=species, y=bill_length_mm, fill=species)) + geom_violin() + facet_wrap(~island)
+```
+
+### Two continuous and one categorical 
+
+And lastly let's look back at how we can play with scatterplots of using a third categorical variable (using `ggplot2` only). We can color the points by species, 
+
+```{r}
+ggplot(pen, aes(x=flipper_length_mm, y=bill_length_mm, color=species)) + geom_point()
+```
+
+We could add a smoothing lowess line for each species separately, 
+```{r}
+ggplot(pen, aes(x=flipper_length_mm, y=bill_length_mm, color=species)) + geom_point() + geom_smooth(se=FALSE)
+```
+
+And using `grid.arrange` we can include both visualizations.
+```{r}
+#| fig-width: 11
+a <- ggplot(pen, aes(x=bill_length_mm, y=bill_depth_mm, color=species)) + geom_point() + ggtitle("Colored by species")
+d <- ggplot(pen, aes(x=bill_length_mm, y=bill_depth_mm, color=species)) + geom_point() + 
+      geom_smooth(se=FALSE) +ggtitle("Lowess line per species")
+grid.arrange(a, d, ncol=2, nrow=1)
+```
+
+Or we just panel by species.
+
+```{r}
+#| fig-width: 9
+ggplot(pen, aes(x=bill_length_mm, y=bill_depth_mm)) + geom_point() + facet_wrap(~species)
+```
+
+Or use a combination of `facet_wrap` and the `gghighlight` package to show separate graphs for each species, but overlaid onto the full dataset.
+
+```{r}
+#| fig-width: 9
+#| source-line-numbers: "5"
+
+ggplot(pen, aes(x=bill_length_mm, y=bill_depth_mm), na.rm = TRUE) +
+          geom_point() +
+          scale_color_brewer(palette = "Paired") +
+          aes(color = species) +
+          facet_wrap(~ species) + gghighlight::gghighlight() +
+          theme_minimal()
+```
+
+We could even change the color by sex, and shape by species. 
+```{r}
+ggplot(pen, aes(x=flipper_length_mm, y=bill_length_mm, color=sex, shape=species)) + geom_point() 
+```
+
+That's harder to read. So note that just because you **can** change an aesthetic, doesn't mean you should. And just because you can plot things on the same axis, doesn't mean you have to. 
+
+Before you share your plot with any other eyes, always take a step back and try to explain what it is telling you. If you have to take more than a minute to get to the point then it may be too complex and simpler graphics are likely warranted. 
+
+## Best Practices for Data Visualization
+
+### Choosing Colors {#choosing-colors}
+
+Whenever possible, colors should either help your audience more easily
+interpret the graph or convey meaning in some way.
+
+**Tips for choosing colors:**
+
+-   Create your graph using the default colors first, then modify if
+    needed
+-   Use a colorblind-friendly palette -- Check [this
+    page](https://davidmathlogic.com/colorblind/#%23D81B60-%231E88E5-%23FFC107-%23004D40)
+    and [this page](https://projects.susielu.com/viz-palette) to see how
+    colors look under different types of colorblindness
+-   Use contrasting colors (often called qualitative colors) for categorical variables since all variables carry the same weight -- See [this   page](https://colorspace.r-forge.r-project.org/articles/hcl_palettes.html) for an example of contrasting/qualitative color palettes.  
+-   Only use a gradient for ordinal/continuous data when implying a
+    numeric scale (e.g., likert)
+
+For more than 2 colors I do not recommend choosing the colors yourself. The [`RColorBrewer`](https://r-graph-gallery.com/38-rcolorbrewers-palettes.html) package has many pre-set color palettes to choose from, including examples of sequential vs. divergent color scales. To see more examples of color palettes, including sequential vs. diverging color scales and colorblind-friendly palettes, check out the [Color Brewer 2.0](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) site. If you really want/need to choose colors yourself, here is a [great cheatsheet](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/colorPaletteCheatsheet.pdf) about using color palettes.
+
+### Significant Figures
+
+When creating graphs and tables, R (and other stats programs) will often
+display two or more significant figures for each calculation. In most
+cases, this is unnecessary for understanding differences between the
+variables and will be more difficult for your audience to interpret. See
+an example of this in the **Avg Body Mass** column in the two tables
+below:
+
+:::: {.columns}
+
+::: {.column width="48%"}
+```{r}
+nosigfig <- pen %>% select(species, sex, body_mass_g) %>% 
+   group_by(species, sex) %>% 
+    summarise(across(where(is.numeric),
+        list(mean = ~ mean(.x, na.rm = TRUE), count = ~ sum(!is.na(.x))))) %>%
+   relocate(species, sex, body_mass_g_count, body_mass_g_mean) %>%
+   rename(Species = species, Sex = sex, Count = body_mass_g_count, "Avg Body Mass (g)" = body_mass_g_mean)
+
+nosigfig %>% 
+  kable(booktabs = TRUE, caption = "Mean Penguin Body Mass by Species and Sex", align = "lccc") %>% 
+  kable_styling(latex_options = c("striped", "HOLD_position"))
+```
+:::
+
+::: {.column width="48%"}
+```{r}
+sigfig <- pen %>% select(species, sex, body_mass_g) %>% 
+   group_by(species, sex) %>% 
+     summarise(across(where(is.numeric),
+       list(mean = ~ round(mean(.x, na.rm = TRUE)), count = ~ sum(!is.na(.x))))) %>%
+   relocate(species, sex, body_mass_g_count, body_mass_g_mean) %>%
+   rename(Species = species, Sex = sex, Count = body_mass_g_count, "Avg Body Mass (g)" = body_mass_g_mean)
+
+sigfig %>% 
+  kable(booktabs = TRUE, caption = "Mean Penguin Body Mass by Species and Sex", align = "lccc") %>% 
+  kable_styling(latex_options = c("striped", "HOLD_position"))
+```
+:::
+::::
+
+Note that some packages (`sjPlot`, etc.) will do this for you. 
+
+### Consistent Themes
+
+It is considered good practice to create graphs with as little "visual
+noise" - extra lines, unnecessary colors/grayscale, numbers with too
+many significant figures, etc. - as possible. Visual noise can be
+overwhelming and cause key points to be missed because it forces your
+audience to process extra information.
+
+The easiest way to minimize unnecessary visual noise is to set a global
+theme for your graphs after loading in your R packages. 
+
+Which graph is easier to interpret from a quick glance?
+
+```{r, fig.width=14, fig.height=6}
+#| source-line-numbers: "12"
+this <- plot_grpfrq(var.cnt = pen$species, var.grp = pen$island, title = "This?") +
+          labs(subtitle = "Count of Penguin Species by Island (2007-2009)") +
+          xlab("Penguin Species") + ylab("Count") +
+          set_theme(legend.pos = "top")
+
+that <- plot_grpfrq(var.cnt = pen$species, var.grp = pen$island, title = "Or That?") +
+          labs(subtitle = "Count of Penguin Species by Island (2007-2009)") +
+          xlab("Penguin Species") + ylab("Count") +
+          set_theme(legend.pos = "top",
+            base = theme_minimal())
+
+grid.arrange(this, that, ncol = 2)
+```
+
+An even better option is to use the following code chunk in the setup header to set a consistent theme across all of the graphs in your document. 
+
+```{r}
+# For ggplot
+ggplot2::theme_set(theme_minimal())
+
+# For sjPlot
+sjPlot::set_theme(base = theme_minimal())
+```
+
+More ggthemes can be found
+[here](https://yutannihilation.github.io/allYourFigureAreBelongToUs/ggthemes/). Remember that it is considered good practice to choose the theme with the least visual noise that still
+conveys all the needed information for your graph.
+
+## Troubleshooting 
+
+### Problem: Missing data showing up as a category in ggplot? 
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+NCbirths <- read.csv("https://www.norcalbiostat.com/data/NCbirths.csv", header=TRUE)
+email <- read.table("https://www.norcalbiostat.com/data/email.txt", header=TRUE, sep="\t")
+```
+
+Get rid of that far right bar!
+```{r}
+ggplot(NCbirths, aes(x=marital)) + geom_bar()
+```
+
+::: {.callout-tip appearance=minimal collapse=true}
+
+## Solution:
+Use `dplyr` to select only the variables you are going to plot, then pipe in the `na.omit()` at the end. It will create a temporary data frame (e.g) `plot.data` that you then provide to `ggplot()`.
+
+```{r}
+plot.data <- NCbirths %>% select(marital) %>% na.omit()
+ggplot(plot.data, aes(x=marital)) + geom_bar()
+```
+
+:::
+
+### Problem: Got numerical binary 0/1 data but want to plot it as categorical? 
+
+Consider a continuous variable for the number of characters in an email `num_char`, and a 0/1 binary variable `spam`. 
+
+::: {.callout-tip appearance=minimal collapse=true}
+
+## Solution:
+Create a second variable `var_factor` for plotting and keep the binary `var` as 0/1 for analysis. 
+
+```{r}
+email$spam_cat <- factor(email$spam, labels=c("Ham", "Spam"))
+ggplot(email, aes(y=num_char, x=spam_cat)) + geom_boxplot()
+```
+
+:::
+
+
+### Problem: You want to change the legend title for a `fill` or `color` scale.  
+
+::: {.callout-tip appearance=minimal collapse=true}
+
+## Solution:
+Add the `name=` argument to whatever layer you added that created the legend. Here I specified a `fill`, and it was a `discrete` variable. So I use the `scale_fill_discrete()` layer. 
+
+```{r}
+ggplot(email, aes(y=num_char, x=spam_cat, fill=spam_cat)) + geom_boxplot() + 
+  scale_fill_discrete(name="Ya like Spam?")
+```
+
+Here, I `col`ored the points by a discrete variable, so the layer is `scale_color_discrete()`.
+```{r}
+ggplot(email, aes(x=num_char, y=line_breaks, col=spam_cat)) + geom_point() +
+  scale_color_discrete(name="Ya like Spam?")
+```
+
+:::
+
+
+## But what about...
+
+* Legend adjustment: remove it, move it to another side, rename it
+* Custom specified colors and shapes
+
+Go to the [R Graphics Cookbook, 2e](https://r-graphics.org) for these. 
+
+Other visualizations:
+
+* [Heat maps](https://www.r-bloggers.com/how-to-make-a-simple-heatmap-in-ggplot2/) 
+* [Word clouds](https://rpubs.com/brandonkopp/creating-word-clouds-in-r), or [simpler](http://dangoldin.com/2016/06/06/word-clouds-in-r/)
+* Interactive plots - Look into `plotly()` and `ggplotly()`, start with their guide directed towards R users [here](https://plotly.com/ggplot2/getting-started/) or browse the [Plotly R open source graphing library](https://plotly.com/r/)
+
+
+## Additional Resources
+
+For any Google Search -  be sure to limit searches to within the past year or so. R packages get updated very frequently, and many functions change or become obsolete. 
+
+* Comprehensive guides
+  - [R Graphics 2e](https://www.stat.auckland.ac.nz/~paul/RG2e/): The best book about using base graphics
+  - [R Graphics Cookbook 2e](https://r-graphics.org): The best book for using ggplot2 
+  - [ggplot2: Elegant Graphics for Data Analysis 3e](http://ggplot2.org/book/) 
+
+* Subject reference and tutorial sites
+
+  - [Math 130 Lesson 07 - Creating graphics](https://norcalbiostat.github.io/MATH130/notes/07_plots.html#The_syntax_of_ggplot) - more on ggplot2 syntax
+  
+  - [STHDA](http://www.sthda.com/english/): Statistical tools for high-throughput data analysis.
+    - [ggplot2 essentials](http://www.sthda.com/english/wiki/ggplot2-essentials)
+    - [ggplot2 qq plot (quantile - quantile graph) : Quick start guide](http://www.sthda.com/english/wiki/ggplot2-qq-plot-quantile-quantile-graph-quick-start-guide-r-software-and-data-visualization)
+    - [Other graphics options](http://www.sthda.com/english/articles/32-r-graphics-essentials/)
+    
+  - [Quick-R / Datacamp](https://www.statmethods.net): 
+    - [Basic Graphs](http://www.statmethods.net/graphs/index.html)
+    - [ggplot2](http://www.statmethods.net/advgraphs/ggplot2.html)
+    - [Scatterplots](http://www.statmethods.net/graphs/scatterplot.html) 
+    
+  - [R-bloggers](https://www.r-bloggers.com)
+    - [Waffle charts](https://www.r-bloggers.com/making-waffle-charts-in-r-with-the-new-waffle-package/)
+    - [Scatterplot matrices](https://www.r-bloggers.com/scatterplot-matrices/)
+
+* Literate programming tools
+  - Quarto
+    - [Multiple figure alignment](https://quarto.org/docs/get-started/computations/rstudio.html#multiple-figures) 
+
+* Help lists 
+    - [ggplot2 Google Groups](http://groups.google.com/group/ggplot2) 
+    - [Stackoverflow questions tagged ggplot2](http://stackoverflow.com/tags/ggplot2)
+    - [Chico R users group](https://www.meetup.com/chico-r-users-group/)

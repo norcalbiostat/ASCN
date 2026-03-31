@@ -29,9 +29,7 @@ This chapter demonstrates different data visualizations by variable type (catego
 
 ## Choosing your audience
 
-
-The level of detail you put into your graphs/tables will depend on who
-the graph/table is for. In general, you will be visualizing data for
+Before you start visualizing your data, you should first determine who your audience is. The level of detail you put into your graphs/tables will depend on who the graph/table is for. In general, you will be visualizing data for
 three audience types: yourself and/or your data management team, an internal audience (other specialties within your organization, research coordinators), and external, professional audiences. The tabs below describe the three audience types and show an example graph for each.
 
 **Who is your audience?**
@@ -122,9 +120,7 @@ There are 152 Adelie penguins, 68 Chinstrap penguins, and 124 Gentoo penguins in
 
 ## gtsummary
 
-:::{.callout-warning appearance=simple}
 The [tbl_summary](https://www.danieldsjoberg.com/gtsummary/reference/tbl_summary.html) function in the [gtsummary](https://www.danieldsjoberg.com/gtsummary/) package can create prettier tables more easily than in base R. The [tbl_summary](https://www.danieldsjoberg.com/gtsummary/reference/tbl_summary.html) function defaults to creating a summary table of the entire data set, so you must select only the variables you want to summarize before running the function. 
-:::
 
 ```{r}
 pen |> select(species) |> tbl_summary()
@@ -173,11 +169,9 @@ ggplot(pen, aes(x=species)) + theme_bw() +
 
 
 ## sjPlot
-::: {.callout-warning appearance=simple}
 
 The [sjPlot](https://strengejacke.github.io/sjPlot/) package will automatically add frequencies for you, making it the preferred package for these situations.
 
-:::  
 
 ```{r}
 plot_frq(pen, species,
@@ -451,11 +445,8 @@ ggboxplot(pen, x=1, y="bill_length_mm",
 
 ### Violin plots
 
-:::{.callout-warning appearance=simple}
 Violin plots are similar in concept to boxplots, but they show the shape
 of the data distribution rather than representing the data as a box. The following graphs show the same `bill_length_mm` data visualized as a violin plot instead of a boxplot.
-
-:::
 
 ::: {.panel-tabset}
 
@@ -630,10 +621,7 @@ neither agree nor disagree).
 
 ### Two-way tables
 
-::: {.callout-warning appearance=simple}
 Frequency and proportion tables are both ways of comparing one set of variables against another. Frequency tables report the count of each variable based on another variable, while proportion tables show variable percentages by either cells, rows, or columns.
-
-:::
 
 ::: {.panel-tabset}
 
@@ -779,27 +767,26 @@ plot_xtab(pen$island, pen$species, margin="row", coord.flip = TRUE)
 :::
 
 ### Mosaic plots
-But what if you want to know how two categorical variables are related and you don't want to look at two different barplots? Mosaic plots are a way to visualize the proportions in a table. So here's the two-way table we'll be plotting. 
+But what if you want to know how two categorical variables are related and you don't want to look at two different barplots? Mosaic plots are a way to visualize the proportions in a table. So here's the two-way table we'll be plotting - number of cylinders (4, 6, and 8) compared to number of gears (3, 4, and 5) in the `mtcars` dataset. 
 
 ```{r}
-table(pen$year, pen$species)
+
+table(mtcars$cyl, mtcars$gear)
 ```
 
 The syntax for a mosaic plot uses _model notation_, which is basically y ~ x where the ~ is read as "twiddle" or "tilde". It's to the left of your **1** key.
 ```{r}
-mosaicplot(year~species, data=Titanic)
+mosaicplot(cyl~gear, data=mtcars)
 ```
 
 Helpful, ish. Here are two very useful options. In reverse obviousness, `color` applies shades of gray to one of the factor levels, and `shade` applies a color gradient scale to the cells in order of what is less than expected (red) to what is more than expected (blue) if these two factors were completely independent. 
 ```{r, fig.width=10}
 #| layout-ncol: 2
-mosaicplot(year~species, data=pen, color=TRUE)
-mosaicplot(year~species, data=pen, shade=TRUE)
+mosaicplot(cyl~gear, data=mtcars, color=TRUE)
+mosaicplot(cyl~gear, data=mtcars, shade=TRUE)
 ```
-::: {.callout-warning appearance=simple}
 
-For example, there are fewer Adelie penguins and more Gentoo penguins than expected on Torgersen Island, and more Chinstrap penguins than expected on Dream Island. As you can see, knowing what your data means when trying to interpret what the plots are telling you is essential. 
-:::
+For example, there are fewer 4- and 6-cylinder cars with three gears and more 8-cylinder cars with three gears than expected. As you can see, knowing what your data means when trying to interpret what the plots are telling you is essential. 
 
 That's about all the ways you can plot categorical variables. 
 
@@ -1118,7 +1105,6 @@ grid.arrange(a,b, ncol=2)
 
 ## Quarto
 
-::: {.callout-warning appearance=simple}
 Quarto makes it even easier to arrange multiple plots using `layout-ncol`.
 
 ```{r}
@@ -1129,8 +1115,6 @@ ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density()
 ```
 
 See [this link](https://quarto.org/docs/get-started/computations/rstudio.html#multiple-figures) for more context and other options for labeling graphs. 
-
-:::
 
 :::
 
@@ -1155,11 +1139,6 @@ c.vars <- pen[,c('flipper_length_mm', 'bill_length_mm', 'bill_depth_mm',
                  'body_mass_g')]
 pairs(c.vars)
 ```
-
-::: {.callout-warning appearance=simple}
-> Replace original interpretation- We can see price has a non-linear relationship with X, Y and Z and x & y have a near perfect linear relationship. 
-
-:::
 
 
 ### Two categorical and one continuous
@@ -1333,7 +1312,7 @@ sjPlot::set_theme(base = theme_minimal())
 
 More ggthemes can be found
 [here](https://yutannihilation.github.io/allYourFigureAreBelongToUs/ggthemes/). Remember that it is considered good practice to choose the theme with the least visual noise that still
-conveys all the needed information for your graph.
+conveys all the necessary information for your graph.
 
 ## Troubleshooting 
 

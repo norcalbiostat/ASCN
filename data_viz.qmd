@@ -24,11 +24,12 @@ library(kableExtra)
 
 Visualizing your data is hands down the most important thing you can learn to do. There are links to additional resources at the end of this document for additional learning. 
 
+This chapter demonstrates different data visualizations by variable type (categorical, continuous, or both) and number of variables. Most visualizations are created using multiple techniques to demonstrate different package features and approaches. 
+
+
 ## Choosing your audience
 
-
-The level of detail you put into your graphs/tables will depend on who
-the graph/table is for. In general, you will be visualizing data for
+Before you start visualizing your data, you should first determine who your audience is. The level of detail you put into your graphs/tables will depend on who the graph/table is for. In general, you will be visualizing data for
 three audience types: yourself and/or your data management team, an internal audience (other specialties within your organization, research coordinators), and external, professional audiences. The tabs below describe the three audience types and show an example graph for each.
 
 **Who is your audience?**
@@ -92,15 +93,9 @@ plot_frq(pen$island, title = "Count of Penguins by Island") +
 
 We will use the `penguins` dataset that comes with the `palmerpenguins` package. This dataset contains size measurements for three penguin species observed on three islands in the Palmer Archipelago, Antarctica. Review `?penguins` to learn about the variables we will be using. 
 
-
 ```{r}
 pen <- palmerpenguins::penguins
 ```
-
-::: {.callout-warning appearance=simple}
-The following sections show examples of data visualizations by variable type (categorical, continuous, or both) and number of variables. These visualizations have been created in base R and at least one other R package to demonstrate different ways of creating similar visualizations and demonstrate key package features.
-
-:::
 
 ## One Categorical Variable
 
@@ -125,9 +120,7 @@ There are 152 Adelie penguins, 68 Chinstrap penguins, and 124 Gentoo penguins in
 
 ## gtsummary
 
-:::{.callout-warning appearance=simple}
 The [tbl_summary](https://www.danieldsjoberg.com/gtsummary/reference/tbl_summary.html) function in the [gtsummary](https://www.danieldsjoberg.com/gtsummary/) package can create prettier tables more easily than in base R. The [tbl_summary](https://www.danieldsjoberg.com/gtsummary/reference/tbl_summary.html) function defaults to creating a summary table of the entire data set, so you must select only the variables you want to summarize before running the function. 
-:::
 
 ```{r}
 pen |> select(species) |> tbl_summary()
@@ -139,12 +132,7 @@ This can be advantageous if you want to have a single table showing the frequenc
 
 ### Frequency Barcharts / Barplots
 
-::: {.callout-warning appearance=simple}
-
-Another common way to display categorical data frequencies is a barchart/barplot.
-:::  
-
-A Barchart or barplot takes these frequencies, and draws bars along the X-axis where the height of the bars is determined by the frequencies seen in the table. 
+A common way to display categorical data frequencies is a barchart/barplot where the bars are typically drawn along the X-axis where the height of the bars is determined by the frequencies seen in the table. 
 
 ::: {.panel-tabset}
 
@@ -181,11 +169,9 @@ ggplot(pen, aes(x=species)) + theme_bw() +
 
 
 ## sjPlot
-::: {.callout-warning appearance=simple}
 
 The [sjPlot](https://strengejacke.github.io/sjPlot/) package will automatically add frequencies for you, making it the preferred package for these situations.
 
-:::  
 
 ```{r}
 plot_frq(pen, species,
@@ -197,11 +183,13 @@ plot_frq(pen, species,
 
 ### Proportion Barcharts
 
+Often you don't want to compare counts but percents. Many statistical tests compare percentages, not counts. 
+
 ::: {.panel-tabset}
 
 ## ggplot
 
-Often you don't want to compare counts but percents. To accomplish this, we have to aggregate the data to calculate the proportions first, then plot the aggregated data using `geom_col` to create the columns.
+To accomplish this in ggplot we have to aggregate the data to calculate the proportions first, then plot the aggregated data using `geom_col` to create the columns.
 
 ```{r}
 spec.props <- data.frame(prop.table(table(pen$species)))
@@ -212,12 +200,6 @@ ggplot(spec.props, aes(x=Var1, y=Freq)) + geom_col() +
   ggtitle("Proportion of penguins by species")
 ```
 
-## base
-
-:::{.callout-warning appearance=simple}
-* create a 'base' tab, but with only space for robin to write
-
-:::
 
 ## sjPlot
 
@@ -231,13 +213,9 @@ plot_frq(pen, species,
 :::
 
 
-### Other
-
-::: {.callout-warning appearance=simple}
+### Other ways to visualize categorical data
 
 Although tables and barcharts are popular data visualizations for a reason, you may want to show your data in a different way. Below are some examples of alternate data visualizations that show similar information to tables/barcharts. 
-
-:::  
 
 
 ::: {.panel-tabset}
@@ -287,25 +265,18 @@ waffle(ps/10, rows=5, size=0.5,
 :::
 
 ## One Continuous Variable
-Here we can look at the bill length and depth, flipper length, and body mass of the penguins. 
 
-### Dotplot
-
-::: {.callout-warning appearance=simple}
-> RAD change this to an introduction/motivating example instead of describing a plot type. 
-
-:::
+The base function `plot()` creates a **dotplot** for a continuous variable. The value of the variable is plotted on the y axis, and the index, or row number, is plotted on the x axis. This gives you a nice, quick way to see the distribution of _individual_ values in the data. 
 
 ```{r}
 plot(pen$bill_length_mm)
 ```
 
-The base function `plot()` creates a **dotplot** for a continuous variable. The value of the variable is plotted on the y axis, and the index, or row number, is plotted on the x axis. This gives you a nice, quick way to see the values of the data. 
-
 Often you are not interested in the individual values of each data point, but the _distribution_ of the data. In other words, where is the majority of the data? Does it look symmetric around some central point? Around what values do the bulk of the data lie? 
 
 
 ### Histograms
+
 Rather than showing the value of each observation, we prefer to think of the value as belonging to a *bin*. **The height of the bars in a histogram display the frequency of values that fall into those of those bins.** For example if we cut the bill length distribution into 7 bins of equal width, the frequency table would look like this: 
 
 ```{r}
@@ -358,23 +329,12 @@ To get a better idea of the true shape of the distribution we can "smooth" out t
 ::: {.panel-tabset}
 
 ## base
-
+[There are missing values in `bill_length_mm` and so I had to get rid of it using `na.omit()` prior to creating the density plot. See @sec-missing_fix for details]{.aside}
 ```{r}
-# plot(density(na.omit(pen$bill_length_mm))) 
-pen$bill_length_mm |> na.omit() |> density() |> plot()
+plot(density(na.omit(pen$bill_length_mm))) 
 ```
 
 Awesome title huh? (NOT)
-
-::: {.callout-warning appearance=simple}
-
-> discuss why na.omit and nesting vs pipe example
-
-Using `na.omit()` is dangerous! This will remove ALL rows with ANY missing data in it. Regardless if the missing values are contained in the variables you are interested in. 
-The example below employs a trick/work around to not have NA values show in the output.
-We take the data set `addhealth` _and then_ `select` the variables we want to plot, _and then_ we use `na.omit()` to delete all rows with missing data. Then that is saved as a new, temporary data frame specifically named for this case (`plot.bmi.smoke`). 
-
-:::
 
 ## ggplot2
 
@@ -485,11 +445,8 @@ ggboxplot(pen, x=1, y="bill_length_mm",
 
 ### Violin plots
 
-:::{.callout-warning appearance=simple}
 Violin plots are similar in concept to boxplots, but they show the shape
 of the data distribution rather than representing the data as a box. The following graphs show the same `bill_length_mm` data visualized as a violin plot instead of a boxplot.
-
-:::
 
 ::: {.panel-tabset}
 
@@ -664,10 +621,7 @@ neither agree nor disagree).
 
 ### Two-way tables
 
-::: {.callout-warning appearance=simple}
 Frequency and proportion tables are both ways of comparing one set of variables against another. Frequency tables report the count of each variable based on another variable, while proportion tables show variable percentages by either cells, rows, or columns.
-
-:::
 
 ::: {.panel-tabset}
 
@@ -813,26 +767,26 @@ plot_xtab(pen$island, pen$species, margin="row", coord.flip = TRUE)
 :::
 
 ### Mosaic plots
-But what if you want to know how two categorical variables are related and you don't want to look at two different barplots? Mosaic plots are a way to visualize the proportions in a table. So here's the two-way table we'll be plotting. 
+But what if you want to know how two categorical variables are related and you don't want to look at two different barplots? Mosaic plots are a way to visualize the proportions in a table. So here's the two-way table we'll be plotting - number of cylinders (4, 6, and 8) compared to number of gears (3, 4, and 5) in the `mtcars` dataset. 
+
 ```{r}
-table(pen$island, pen$species)
+
+table(mtcars$cyl, mtcars$gear)
 ```
 
 The syntax for a mosaic plot uses _model notation_, which is basically y ~ x where the ~ is read as "twiddle" or "tilde". It's to the left of your **1** key.
 ```{r}
-mosaicplot(island~species, data=pen)
+mosaicplot(cyl~gear, data=mtcars)
 ```
 
 Helpful, ish. Here are two very useful options. In reverse obviousness, `color` applies shades of gray to one of the factor levels, and `shade` applies a color gradient scale to the cells in order of what is less than expected (red) to what is more than expected (blue) if these two factors were completely independent. 
 ```{r, fig.width=10}
-par(mfrow=c(1,2)) # display the plots in 1 row and 2 columns
-mosaicplot(island~species, data=pen, color=TRUE)
-mosaicplot(island~species, data=pen, shade=TRUE)
+#| layout-ncol: 2
+mosaicplot(cyl~gear, data=mtcars, color=TRUE)
+mosaicplot(cyl~gear, data=mtcars, shade=TRUE)
 ```
-::: {.callout-warning appearance=simple}
 
-For example, there are fewer Adelie penguins and more Gentoo penguins than expected on Torgersen Island, and more Chinstrap penguins than expected on Dream Island. As you can see, knowing what your data means when trying to interpret what the plots are telling you is essential. 
-:::
+For example, there are fewer 4- and 6-cylinder cars with three gears and more 8-cylinder cars with three gears than expected. As you can see, knowing what your data means when trying to interpret what the plots are telling you is essential. 
 
 That's about all the ways you can plot categorical variables. 
 
@@ -899,14 +853,11 @@ ggplot(pen, aes(x=body_mass_g, y=flipper_length_mm)) + geom_point() +
 
 Line plots connect each dot with a straight line. This is most often done when measuring trends of the response as the value of x increases (such as a time series)
 
-::: {.callout-warning appearance=simple}
-> switch out example for time series
+Let's look at trends over time in the body mass of penguins. First we calculate the average body mass per year. 
 
-:::
-
-We saw earlier that `body_mass_g` and `flipper_length_mm` seemed possibly linear. Let see how the average flipper length changes with body mass. 
 ```{r}
-mm.per.g <- pen %>% group_by(body_mass_g) %>% summarise(mean = mean(flipper_length_mm))
+body.changes.overtime <- pen %>% group_by(year) %>% 
+  summarise(mean = mean(body_mass_g, na.rm=TRUE))
 ```
 
 ::: {.panel-tabset}
@@ -915,42 +866,36 @@ mm.per.g <- pen %>% group_by(body_mass_g) %>% summarise(mean = mean(flipper_leng
 For base graphics, type='b' means both points and lines, 'l' gives you just lines and 'p' gives you only points. You can find more plotting character options under `?pch`. 
 
 ```{r}
-plot(mean~body_mass_g, data=mm.per.g, type='l')
+plot(mean~year, data=body.changes.overtime, type='l')
 ```
 
 ## ggplot
 With ggplot we specify that we want a line geometry only. 
 ```{r}
-ggplot(mm.per.g, aes(x=body_mass_g, y=mean)) + geom_line()
+ggplot(body.changes.overtime, aes(x=year, y=mean)) + geom_line()
 ```
 
 :::
 
-How does this relationship change with penguin species? First lets 
-get the average flipper length per combination of body mass and species 
+How does this relationship change with penguin species? This is much easier completed in ggplot than base R, so only that method is shown.
+
+First lets get the average body mass per year and species 
 
 ```{r}
-mmpgs <- pen %>% group_by(body_mass_g, species) %>% summarise(mean = mean(flipper_length_mm))
+species.mass.overtime <- pen %>% group_by(species, year) %>% 
+  summarise(mean = mean(body_mass_g, na.rm=TRUE))
 ```
 
-::: {.panel-tabset}
-
-## ggplot
 This is where ggplot starts to excel in its ease of creating more
 complex plots. All we have to do is specify that we want the lines 
 colored by the cut variable. 
 
 ```{r}
-ggplot(mmpgs, aes(x=body_mass_g, y=mean, col=species)) + geom_line()
+ggplot(species.mass.overtime, aes(x=year, y=mean, col=species)) + geom_line()
 ```
 
 And we get one line per species. 
 
-## base
-This plot can be created in base graphics, but it takes an advanced 
-knowledge of the graphics system to do so. So I do not show it here. 
-
-:::
 
 ## Continuous v. Categorical
 Create an appropriate plot for a continuous variable, and plot it for each
@@ -1160,7 +1105,6 @@ grid.arrange(a,b, ncol=2)
 
 ## Quarto
 
-::: {.callout-warning appearance=simple}
 Quarto makes it even easier to arrange multiple plots using `layout-ncol`.
 
 ```{r}
@@ -1171,8 +1115,6 @@ ggplot(pen, aes(x=bill_depth_mm, fill=species)) + geom_density()
 ```
 
 See [this link](https://quarto.org/docs/get-started/computations/rstudio.html#multiple-figures) for more context and other options for labeling graphs. 
-
-:::
 
 :::
 
@@ -1197,11 +1139,6 @@ c.vars <- pen[,c('flipper_length_mm', 'bill_length_mm', 'bill_depth_mm',
                  'body_mass_g')]
 pairs(c.vars)
 ```
-
-::: {.callout-warning appearance=simple}
-> Replace original interpretation- We can see price has a non-linear relationship with X, Y and Z and x & y have a near perfect linear relationship. 
-
-:::
 
 
 ### Two categorical and one continuous
@@ -1375,7 +1312,7 @@ sjPlot::set_theme(base = theme_minimal())
 
 More ggthemes can be found
 [here](https://yutannihilation.github.io/allYourFigureAreBelongToUs/ggthemes/). Remember that it is considered good practice to choose the theme with the least visual noise that still
-conveys all the needed information for your graph.
+conveys all the necessary information for your graph.
 
 ## Troubleshooting 
 

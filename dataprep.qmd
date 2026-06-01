@@ -575,6 +575,34 @@ mean(y, na.rm=TRUE)
 In R, any arithmetic function (like addition, multiplication) on missing data results in a missing value. The `na.rm=TRUE` toggle tells R to calculate the *complete case* mean. This is a biased measure of the mean, but missing data is a topic worthy of it's own course and is introduced in @sec-classification.
 :::
 
+### Getting rid of missing data {#sec-missing_fix}
+
+Sometimes missing values can cause problems with data analysis or graphs and you need a way to deal with it. You can do one of two things: 
+
+1. Fill in the missing values with some value (Imputation). This is discussed in @sec-mda. 
+2. Delete the rows with missing values using a function like `na.omit()`. This called "complete cases" and is discussed below. 
+
+```{r}
+(DF <- data.frame(x = c(NA, 2, 3), y = c(0, 10, NA)))
+DF.nomiss <- na.omit(DF)
+mean(DF.nomiss$x)
+```
+
+Using `na.omit()` is dangerous! This will remove ALL rows with ANY missing data in it,  regardless if the missing values are contained in the variables you are interested in. This can lead to incorrect calculations such as the mean of the variable `x` above. 
+
+We can employ a work around to exclude NA values in a single variable. 
+
+```{r}
+#| code-annotations: below
+# correct mean
+DF$x |>  #<#1>
+  na.omit() |>  #<#2>
+  mean()  #<#3>
+```
+
+1. We take the `DF$x` variable _and then_
+2. use `na.omit()` to delete all rows with missing data
+3. Then we calculate the average of the non-missing values. 
 
 
 ## Export and save
